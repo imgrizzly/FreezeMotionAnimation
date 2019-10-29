@@ -16,14 +16,18 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.hardware.Camera;
 import android.os.Bundle;
+import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.Switch;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Main2Activity extends AppCompatActivity implements SurfaceHolder.Callback {
@@ -33,32 +37,23 @@ public class Main2Activity extends AppCompatActivity implements SurfaceHolder.Ca
     private SurfaceHolder mHoler;
     private ImageView mImageView;
     private String mFilePath;
+    private String sFileName;
+    private Switch aSwitch;
+    private List <String> lOnionSkin  = new ArrayList<>();
+    private int iCaptureNum = 0;
 
 
     private Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
-            Log.d(TAG, "mFilePath: " + mFilePath);
-
-            FileInputStream fis = null;
+            Log.d(TAG, "sFileName: " + sFileName);
             try {
-                FileOutputStream fos = new FileOutputStream(mFilePath);
+                FileOutputStream fos = new FileOutputStream(sFileName);
                 fos.write(data);
                 fos.close();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            try {
-                fis = new FileInputStream(mFilePath);
-                Bitmap bitmap = BitmapFactory.decodeStream(fis);
-                Matrix matrix = new Matrix();
-                matrix.setRotate(90);
-                bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-                mImageView.setImageBitmap(bitmap);
-            } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
 
@@ -79,10 +74,47 @@ public class Main2Activity extends AppCompatActivity implements SurfaceHolder.Ca
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main2);
+        aSwitch = findViewById(R.id.switch1);
+        aSwitch.setChecked(false);
+        aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked) {
+//                    aSwitch.setText("Only Today's");
+                    try {
+                        FileInputStream fis = null;
+                        fis = new FileInputStream(lOnionSkin.get(0));
+                        Bitmap bitmap = BitmapFactory.decodeStream(fis);
+                        Matrix matrix = new Matrix();
+                        matrix.setRotate(90);
+                        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                        mImageView.setImageBitmap(bitmap);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    Log.d("You are :", "Checked");
+                }
+                else {
+                    FileInputStream fis = null;
+                    mImageView.setImageBitmap(null);
+                    Log.d("You are :", " Not Checked");
+                    try {
+                        fis = new FileInputStream(lOnionSkin.get(1));
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    Bitmap bitmap = BitmapFactory.decodeStream(fis);
+                    Matrix matrix = new Matrix();
+                    matrix.setRotate(90);
+                    bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+                    mImageView.setImageBitmap(bitmap);
+                }
+            }
+        });
         mPreview = findViewById(R.id.mPreview);
         mImageView = findViewById(R.id.mImageView);
 //        mImageView.setAlpha(0);
-        Log.d(TAG, "onCreate: surfaceview layout size is"+ mPreview.getLayoutParams().width +"," + mPreview.getLayoutParams().height);
+        Log.d(TAG, "onCreate: surfaceview layout size is" + mPreview.getLayoutParams().width + "," + mPreview.getLayoutParams().height);
 //        mPreview.setLayoutParams(new FrameLayout.LayoutParams((int) 600, 600));
 
         mHoler = mPreview.getHolder();
@@ -94,7 +126,7 @@ public class Main2Activity extends AppCompatActivity implements SurfaceHolder.Ca
             }
         });
         mFilePath = getFilesDir().getPath();
-        mFilePath = mFilePath + "/" + "temp.png";
+//        mFilePath = mFilePath + "/" + "temp.png";
     }
 
     @Override
@@ -121,11 +153,15 @@ public class Main2Activity extends AppCompatActivity implements SurfaceHolder.Ca
     }
 
     public void capture(View view) {
-        Log.d(TAG, "onCreate: surfaceview layout size is"+ mPreview.getLayoutParams().width +"," + mPreview.getLayoutParams().height);
+        iCaptureNum = iCaptureNum + 1;
+        sFileName = mFilePath + "/" + "temp"+iCaptureNum + ".png";
+        lOnionSkin.add(sFileName);
+
+        Log.d(TAG, "onCreate: surfaceview layout size is" + mPreview.getLayoutParams().width + "," + mPreview.getLayoutParams().height);
 
         Camera.Parameters parameters = mCamera.getParameters();
-        Log.d(TAG, "now preview width is " + parameters.getPreviewSize().width ) ;
-        Log.d(TAG, "now preview height is " + parameters.getPreviewSize().height ) ;
+        Log.d(TAG, "now preview width is " + parameters.getPreviewSize().width);
+        Log.d(TAG, "now preview height is " + parameters.getPreviewSize().height);
 
         List<Camera.Size> allPreviewSizes = parameters.getSupportedPreviewSizes();
         Camera.Size size = allPreviewSizes.get(0); // get top size
@@ -187,7 +223,7 @@ public class Main2Activity extends AppCompatActivity implements SurfaceHolder.Ca
      * */
     private void setPreview(Camera camera, SurfaceHolder holder) {
         try {
-            Log.d(TAG, "onCreate: surfaceview layout size is"+ mPreview.getLayoutParams().width +"," + mPreview.getLayoutParams().height);
+            Log.d(TAG, "onCreate: surfaceview layout size is" + mPreview.getLayoutParams().width + "," + mPreview.getLayoutParams().height);
 
             /*设置预览角度*/
             camera.setDisplayOrientation(90);
@@ -237,4 +273,5 @@ public class Main2Activity extends AppCompatActivity implements SurfaceHolder.Ca
     public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
         releaseCamera();
     }
+
 }
