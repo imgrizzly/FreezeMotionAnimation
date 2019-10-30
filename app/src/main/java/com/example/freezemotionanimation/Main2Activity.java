@@ -6,8 +6,10 @@ import androidx.core.content.FileProvider;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
@@ -83,8 +85,14 @@ public class Main2Activity extends AppCompatActivity implements SurfaceHolder.Ca
 //                    aSwitch.setText("Only Today's");
                     try {
                         FileInputStream fis = null;
-                        fis = new FileInputStream(lOnionSkin.get(0));
-                        Bitmap bitmap = BitmapFactory.decodeStream(fis);
+                        FileInputStream fis1 = null;
+                        String tmp = lOnionSkin.get(0);
+                        fis = new FileInputStream(tmp);
+                        String tmp2 = lOnionSkin.get(1);
+                        fis1 = new FileInputStream(tmp2);
+                        Bitmap bitmap1 = BitmapFactory.decodeStream(fis);
+                        Bitmap bitmap2 = BitmapFactory.decodeStream(fis1);
+                        Bitmap bitmap = toConformBitmap(bitmap1,bitmap2);
                         Matrix matrix = new Matrix();
                         matrix.setRotate(90);
                         bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
@@ -274,4 +282,32 @@ public class Main2Activity extends AppCompatActivity implements SurfaceHolder.Ca
         releaseCamera();
     }
 
+    public static Bitmap toConformBitmap(Bitmap background, Bitmap foreground) {
+        if (background == null) {
+            return null;
+        }
+
+        int bgWidth = background.getWidth();
+        int bgHeight = background.getHeight();
+        //create the new blank bitmap 创建一个新的和SRC长度宽度一样的位图
+        Bitmap newbmp = Bitmap.createBitmap(bgWidth, bgHeight, Bitmap.Config.ARGB_8888);
+        Canvas cv = new Canvas(newbmp);
+        //draw bg into
+        // 建立Paint 物件
+        Paint vPaint = new Paint();
+        vPaint .setStyle( Paint.Style.STROKE );   //空心
+        vPaint .setAlpha( 75 ); 
+        background.setHasAlpha(true);
+        cv.drawBitmap(background, 0, 0, vPaint);//在 0，0坐标开始画入bg
+        //draw fg into
+        foreground.setHasAlpha(true);
+        cv.drawBitmap(foreground, 0, 0, vPaint);//在 0，0坐标开始画入fg ，可以从任意位置画入
+//        cv.drawBitmap(bm1, 0, 0, null);//在 0，0坐标开始画入fg ，可以从任意位置画入
+//        cv.drawBitmap(bm2, 0, 0, null);//在 0，0坐标开始画入fg ，可以从任意位置画入
+        //save all clip
+        cv.save();//保存
+        //store
+        cv.restore();//存储
+        return newbmp;
+    }
 }
